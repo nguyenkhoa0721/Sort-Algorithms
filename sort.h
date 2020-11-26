@@ -1,3 +1,6 @@
+#include <iostream>
+using namespace std;
+
 template <class T>
 void swapp(T &a, T &b)
 {
@@ -46,7 +49,7 @@ int findPosition(int arr[], int l, int r, int key)
             l = mid + 1;
         }
     }
-    return r;
+    return l;
 }
 void binaryInsertionSort(int arr[], int n)
 {
@@ -67,7 +70,7 @@ void bubbleSort(int arr[], int n)
 {
     for (int i = n - 1; i >= 0; i--)
     {
-        for (int j = 0; j < i - 1; j++)
+        for (int j = 0; j < i; j++)
         {
             if (arr[j] > arr[j + 1])
                 swapp(arr[j], arr[j + 1]);
@@ -158,7 +161,7 @@ void mergeSort(int arr[], int l, int r)
     {
         mid = (l + r) / 2;
         mergeSort(arr, l, mid);
-        mergeSort(arr, mid + 1, l);
+        mergeSort(arr, mid + 1, r);
         merge(arr, l, r, mid + 1);
     }
 }
@@ -168,7 +171,7 @@ void sift(int heap[], int l, int r, int x)
     int i = l, j = i * 2;
     while (j <= r)
     {
-        if (j + 1 < r && heap[j] > heap[j + 1])
+        if (j + 1 <= r && heap[j] > heap[j + 1])
             j++;
         if (heap[j] >= x)
             break;
@@ -244,6 +247,8 @@ void countingSort(int arr[], int n)
     int mx = getMax(arr, n);
     int *b = new int[n + 5];
     int *c = new int[mx + 5];
+    for (int i = 0; i <= mx; i++)
+        c[i] = 0;
     for (int i = 0; i < n; i++)
         c[arr[i]]++;
     for (int i = 0; i <= mx; i++)
@@ -258,31 +263,123 @@ void countingSort(int arr[], int n)
     delete[] b;
     delete[] c;
 }
-int partition(int arr[], int l, int r)
-{
-    int res = arr[l];
-    int p1 = l;
-    int p2 = r + 1;
-    do
-    {
-        do
-            p1++;
-        while (arr[p1] < res);
-        do
-            p2--;
-        while (arr[p2] > res);
-        swapp(arr[p1], arr[p2]);
-    } while (p1 < p2);
-    swapp(arr[p1], arr[p2]);
-    swapp(arr[l], arr[p2]);
-    return p2;
-}
-void quickSort(int arr[], int l, int r)
-{
-    if (l < r)
-    {
-        int mid = partition(arr, l, r);
-        quickSort(arr, l, mid - 1);
-        quickSort(arr, mid + 1, r);
+// int partition(int arr[], int l, int r)
+// {
+//     swapp(arr[l],arr[(l+r)/2]);
+//     int res = arr[l];
+//     int p1 = l;
+//     int p2 = r + 1;
+//     do
+//     {
+//         do
+//             p1++;
+//         while (arr[p1] < res && p1 <= r);
+//         do
+//             p2--;
+//         while (arr[p2] > res && p2 >= l);
+//         swapp(arr[p1], arr[p2]);
+//     } while (p1 < p2);
+//     swapp(arr[p1], arr[p2]);
+//     swapp(arr[l], arr[p2]);
+//     return p2;
+// }
+// void quickSort(int arr[], int l, int r)
+// {
+//     if (l < r)
+//     {
+//         int mid = partition(arr, l, r);
+//         quickSort(arr, l, mid - 1);
+//         quickSort(arr, mid + 1, r);
+//     }
+// }
+
+void quickSort(int a[], int l, int r) {
+    // [l, r] hay [l, r)
+    if (l >= r) {
+        return;
     }
+    int pivot = a[(l + r) / 2];
+    int i = l, j = r;
+    do {
+        while (a[i] < pivot) i++;
+        while (a[j] > pivot) j--;
+        if (i <= j) {
+            swapp(a[i++], a[j--]);
+        }
+    } while (i <= j);
+    quickSort(a, l, j);
+    quickSort(a, i, r);
+}
+void flashSort(int arr[], int n)
+{
+    //classification
+    int maxval = arr[0];
+    int idx = 0, k;
+    int minval = arr[0];
+    int m = 0.43 * n;
+    int *L = new int[m + 1];
+    for (int i = 0; i <= m; i++)
+    {
+        L[i] = 0;
+    }
+    L[0] = -1;
+    for (int i = 0; i < n; i++)
+    {
+        if (arr[i] > maxval)
+        {
+            maxval = arr[i];
+            idx = i;
+        }
+        if (minval > arr[i])
+            minval = arr[i];
+    }
+    for (int i = 0; i < n; i++)
+    {
+        k = ((float)(m - 1) / (maxval - minval)) * (arr[i] - minval);
+        L[k]++;
+    }
+    for (int i = 1; i < m; i++)
+    {
+        L[i] += L[i - 1];
+    }
+    swapp(arr[0], arr[idx]);
+
+    // permutation
+    int move = 0;
+    int j = 0;
+    k = m - 1;
+    while (move < n)
+    {
+        while (j > L[k])
+        {
+            j++;
+            k = ((float)(m - 1) / (maxval - minval)) * (arr[j] - minval);
+        }
+        int flash = arr[j];
+        while (j <= L[k])
+        {
+            k=((float)(m - 1) / (maxval - minval)) * (flash - minval);
+            swapp(arr[L[k]], flash);
+            L[k]--;
+            move++;
+        }
+    }
+
+    //insertsort
+    for (int k = 0; k < m - 1; k++)
+    {
+        for (int i = L[k + 1] - 1; i > L[k]; i--)
+        {
+            int hold;
+            if (arr[i] > arr[i + 1])
+            {
+                hold = arr[i];
+                j = i;
+                while (hold > arr[j + 1])
+                    arr[j++] = arr[j + 1];
+                arr[j] = hold;
+            }
+        }
+    }
+    delete[] L;
 }
